@@ -2,15 +2,9 @@ const router = require("express").Router();
 const CryptoJS = require("crypto-js");
 const {
   verifyTokenAndAuthorization,
-  verifyToken,
+  verifyTokenAndAdmin,
 } = require("../middleware/verifyToken");
 const User = require("../model/User");
-
-// get all the users
-router.get("/", async (req, res) => {
-  const users = await User.find();
-  res.json({ users });
-});
 
 // update
 router.put("/:id", verifyTokenAndAuthorization, async (req, res) => {
@@ -42,5 +36,66 @@ router.delete("/:id", verifyTokenAndAuthorization, async (req, res) => {
     return res.status(503).json(error);
   }
 });
+
+// GET A USER
+router.get("/find/:id", verifyTokenAndAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    const { password, ...other } = user._doc;
+    res.status(200).json({ ...other });
+  } catch (error) {
+    res.status(503).json({ message: error.message });
+  }
+});
+
+// GET ALL USERS
+router.get("/", verifyTokenAndAdmin, async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(503).json({ message: error.message });
+  }
+});
+
+// ADD TO USERS'S CART
+// router.put("/:userId/cart", verifyTokenAndAuthorization, async (req, res) => {
+//   console.log(req.body.productId);
+//   try {
+//     const updatedUser = await User.findByIdAndUpdate(
+//       req.params.userId,
+//       {
+//         $push: { cart: req.body.productId },
+//       },
+//       { new: true }
+//     );
+//     res.status(200).json(updatedUser);
+//   } catch (error) {
+//     res.status(500).json(error.message);
+//   }
+// });
+
+// STATS
+// router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
+//   const date = new Date();
+//   const lastYear = new Date(date.setFullYear(date.getFullYear() - 1));
+//   try {
+//     const data = await User.aggregate([
+//       { $match: { createdAt: lastYear } },
+//       {
+//         $project: {
+//           month: { $month: "$createdAt" },
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: "$month",
+//           total: { $sum: 1 },
+//         },
+//       },
+//     ]);
+//     res.status(200).json(data);
+//   } catch (error) {}
+// });
 
 module.exports = router;
