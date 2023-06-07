@@ -13,17 +13,22 @@ router.post("/register", async (req, res) => {
   });
 
   if (schema.validate(req.body).error) {
-    return res.json(schema.validate(req.body).error.details);
+    return res.status(422).json(schema.validate(req.body).error.details);
   }
 
-  let user = await User.findOne({
+  let existingUser = await User.findOne({
     $or: [{ username: req.body.username }, { email: req.body.email }],
   });
 
-  if (user) {
-    return res
-      .status(409)
-      .json("user already exist try changing email or username");
+  if (existingUser) {
+    let errorResponse = {};
+    if (existingUser.username === req.body.username) {
+      errorResponse.username = "Username already exist!";
+    }
+    if (existingUser.email === req.body.email) {
+      errorResponse.username = "Email already exist!";
+    }
+    return res.status(400).json(errorResponse);
   }
 
   let newUser = new User({
@@ -36,33 +41,33 @@ router.post("/register", async (req, res) => {
   });
 
   try {
-    let savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+    await newUser.save();
+    res.status(201).json("user created");
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
 });
 
 // login
-router.get("/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   let loginSchema = Joi.object().keys({
     username: Joi.string().min(4).required(),
     password: Joi.string().min(4).required(),
   });
   if (loginSchema.validate(req.body).error) {
-    return res.json(loginSchema.validate(req.body).error.details);
+    return res.status(422).json(loginSchema.validate(req.body).error.details);
   }
 
   let user = await User.findOne({ username: req.body.username });
   try {
-    if (!user) return res.json({ message: "user not found!" });
+    if (!user) return res.status(401).json({ error: "Wrong credentials!" });
     let hashedPassword = CryptoJS.AES.decrypt(
       user.password,
       process.env.PASS_SEC
     );
     let OriginalPassword = hashedPassword.toString(CryptoJS.enc.Utf8);
     if (OriginalPassword !== req.body.password) {
-      return res.json({ message: "Wrong credentials!" });
+      return res.status(401).json({ error: "Wrong credentials!" });
     }
     const { password, ...other } = user._doc;
     const accessToken = jwt.sign(

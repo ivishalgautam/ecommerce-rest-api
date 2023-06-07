@@ -10,7 +10,9 @@ router.post("/", verifyTokenAndAdmin, async (req, res) => {
     title: Joi.string().min(3).required(),
     description: Joi.string().min(3).required(),
     image: Joi.string().required(),
-    categories: Joi.array().required(),
+    categories: Joi.array(),
+    size: Joi.string(),
+    color: Joi.string(),
     quantity: Joi.number(),
     price: Joi.number().required(),
   });
@@ -22,6 +24,8 @@ router.post("/", verifyTokenAndAdmin, async (req, res) => {
     description: req.body.description,
     image: req.body.image,
     categories: req.body.categories,
+    size: req.body.size,
+    color: req.body.color,
     quantity: req.body.quantity,
     price: req.body.price,
   });
