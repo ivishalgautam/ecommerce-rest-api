@@ -6,7 +6,7 @@ const {
 } = require("../middleware/verifyToken");
 const User = require("../model/User");
 
-// update
+// update a user
 router.put("/:id", verifyTokenAndAuthorization, async (req, res) => {
   if (req.body.password) {
     req.body.password = CryptoJS.AES.encrypt(
@@ -27,8 +27,8 @@ router.put("/:id", verifyTokenAndAuthorization, async (req, res) => {
   }
 });
 
-// delete
-router.delete("/:id", verifyTokenAndAuthorization, async (req, res) => {
+// delete a user
+router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id);
     return res.status(200).json("user deleted");

@@ -7,9 +7,13 @@ const jwt = require("jsonwebtoken");
 // register a user
 router.post("/register", async (req, res) => {
   const schema = Joi.object().keys({
-    username: Joi.string().min(4).max(20).required(),
-    email: Joi.string().email().min(4).max(40).required(),
-    password: Joi.string().min(4).max(20).required(),
+    firstname: Joi.string().min(3).max(20).required(),
+    lastname: Joi.string(),
+    username: Joi.string()
+      .pattern(/^[a-zA-Z0-9_]{3,30}$/)
+      .required(),
+    email: Joi.string().email().min(3).max(40).required(),
+    password: Joi.string().min(3).max(20).required(),
   });
 
   if (schema.validate(req.body).error) {
@@ -32,6 +36,8 @@ router.post("/register", async (req, res) => {
   }
 
   let newUser = new User({
+    firstname: req.body.firstname,
+    lastname: req.body.lastname || "",
     username: req.body.username,
     email: req.body.email,
     password: CryptoJS.AES.encrypt(
@@ -42,7 +48,7 @@ router.post("/register", async (req, res) => {
 
   try {
     await newUser.save();
-    res.status(201).json("user created");
+    res.status(201).json({ message: "Signed up successfully" });
   } catch (error) {
     res.status(500).json({ msg: error.message });
   }
@@ -51,7 +57,9 @@ router.post("/register", async (req, res) => {
 // login
 router.post("/login", async (req, res) => {
   let loginSchema = Joi.object().keys({
-    username: Joi.string().min(4).required(),
+    username: Joi.string()
+      .pattern(/^[a-zA-Z0-9_]{3,30}$/)
+      .required(),
     password: Joi.string().min(4).required(),
   });
   if (loginSchema.validate(req.body).error) {

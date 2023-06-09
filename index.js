@@ -19,7 +19,7 @@ app.use(cors());
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/carts", cartRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.listen(process.env.PORT || 5000, () => {
   console.log(`server up at: ${process.env.PORT || 5000}`);
